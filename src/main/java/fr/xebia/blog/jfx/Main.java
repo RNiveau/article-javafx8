@@ -1,4 +1,7 @@
-package fr.xebia.blog.jfx;/**
+package fr.xebia.blog.jfx;
+
+
+/**
  * Created by romainn on 11/08/2014.
  */
 
