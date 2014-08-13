@@ -9,24 +9,18 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <weld.version>2.2.4.Final</weld.version>
         <commons-lang.version>3.1</commons-lang.version>
         <jackson.version>1.9.13</jackson.version>
+        <jersey.version>2.11</jersey.version>
         <commons-collections.version>3.2.1</commons-collections.version>
     </properties>
 
 
     <dependencies>
-
         <dependency>
-            <groupId>org.jboss.weld.se</groupId>
-            <artifactId>weld-se-core</artifactId>
-            <version>${weld.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.jboss.weld</groupId>
-            <artifactId>weld-core</artifactId>
-            <version>${weld.version}</version>
+            <groupId>org.glassfish.jersey.core</groupId>
+            <artifactId>jersey-client</artifactId>
+            <version>${jersey.version}</version>
         </dependency>
         <dependency>
             <groupId>commons-collections</groupId>
@@ -43,7 +37,6 @@
             <artifactId>jackson-mapper-asl</artifactId>
             <version>${jackson.version}</version>
         </dependency>
-
     </dependencies>
 
     <build>
