@@ -51,6 +51,7 @@ public class YahooService {
         }
 
         String json = response.readEntity(String.class);
+        System.out.println(json);
         mapper.setDateFormat(new SimpleDateFormat("yyyy-MM-dd"));
         try {
             YahooResponse yahooResponse = mapper.readValue(json,

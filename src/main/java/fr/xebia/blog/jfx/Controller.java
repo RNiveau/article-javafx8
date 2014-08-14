@@ -1,15 +1,23 @@
 package fr.xebia.blog.jfx;
 
 import fr.xebia.blog.service.YahooService;
+import fr.xebia.blog.service.dtos.HistoricQuote;
 import fr.xebia.blog.service.dtos.YahooResponse;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.Group;
 import javafx.scene.Scene;
+import javafx.scene.chart.CategoryAxis;
 import javafx.scene.chart.LineChart;
+import javafx.scene.chart.NumberAxis;
+import javafx.scene.chart.XYChart;
 import javafx.scene.control.ChoiceBox;
+import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.HBox;
@@ -17,7 +25,13 @@ import javafx.stage.Modality;
 import javafx.stage.Stage;
 
 import java.net.URL;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.List;
+import java.util.Optional;
 import java.util.ResourceBundle;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 /**
  * Created by romainn on 13/08/2014.
@@ -31,7 +45,10 @@ public class Controller implements Initializable {
     private ChoiceBox duration;
 
     @FXML
-    private TableView tableView;
+    private TableView<HistoricQuote> tableView;
+
+    @FXML
+    public TableColumn columnDate;
 
     @FXML
     private HBox hboxTable;
@@ -39,14 +56,14 @@ public class Controller implements Initializable {
     @FXML
     private HBox hboxGraph;
 
-    @FXML
-    private LineChart graph;
-
     private YahooService yahooService;
+
+    private ExecutorService executorService;
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
         yahooService = new YahooService();
+        columnDate.setCellValueFactory(value -> new SimpleStringProperty(new SimpleDateFormat("dd-MM-yyyy").format((Date) ((HistoricQuote) ((TableColumn.CellDataFeatures) value).getValue()).getDate())));
     }
 
     public void run(ActionEvent event) {
@@ -55,25 +72,77 @@ public class Controller implements Initializable {
         progressBar.initModality(Modality.WINDOW_MODAL);
         progressBar.initOwner(code.getScene().getWindow());
         progressBar.setScene(new Scene(new Group(JfxUtils.loadFxml("/fr/xebia/blog/fxml/loading.fxml"))));
+        progressBar.show();
+
+        executorService = Executors.newSingleThreadExecutor();
 
         Task<YahooResponse> task = new Task<YahooResponse>() {
             @Override
             protected YahooResponse call() throws Exception {
                 return yahooService.getHistoric(code.getText(), (Integer) duration.getValue());
             }
-        };// -> ;
+        };
         task.setOnFailed(workerStateEvent -> {
             progressBar.close();
             visible(false);
         });
         task.setOnSucceeded(workerStateEvent -> {
             progressBar.close();
-            workerStateEvent.getSource().getValue();
-            visible(true);
-        });
-task.run();
-//        YahooResponse historic =
+            YahooResponse yahooResponse = (YahooResponse) workerStateEvent.getSource().getValue();
+            if (yahooResponse != null && yahooResponse.getQuery().getCount() > 0) {
+                visible(true);
+                final ObservableList<HistoricQuote> items = FXCollections
+                        .observableArrayList();
+                List<HistoricQuote> quotes = yahooResponse.getQuery().getResults().getQuote();
+                quotes.stream().limit(5l).forEach(historic -> items.add(historic));
+                tableView.setItems(items);
 
+                quotes.sort((h1, h2) -> {
+                    if (h1.getDate().getTime() == h2.getDate().getTime())
+                        return 0;
+                    return h1.getDate().getTime() < h2.getDate().getTime() ? -1 : 1;
+                });
+
+                ObservableList<XYChart.Series<String, Float>> lineChartData = FXCollections
+                        .observableArrayList();
+                SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy");
+                final ObservableList<XYChart.Data<String, Float>> observableList = FXCollections
+                        .observableArrayList();
+                quotes.stream().forEach(historic -> {
+                    XYChart.Data<String, Float> data = new XYChart.Data<String, Float>(
+                            dateFormat.format(historic.getDate()),
+                             historic.getClose());
+                    observableList.add(data);
+                });
+                Optional<HistoricQuote> max = quotes.stream().max((h1, h2) -> {
+                    if (h1.getHigh() == h2.getHigh())
+                        return 0;
+                    return h1.getHigh() < h2.getHigh() ? -1 : 1;
+                });
+                Optional<HistoricQuote> min = quotes.stream().min((h1, h2) -> {
+                    if (h1.getLow() == h2.getLow())
+                        return 0;
+                    return h1.getHigh() < h2.getHigh() ? -1 : 1;
+                });
+                final XYChart.Series<String, Float> series = new XYChart.Series<String, Float>(
+                        "Evolution du cours", observableList);
+                lineChartData.add(series);
+                final CategoryAxis xAxis = new CategoryAxis();
+                xAxis.setLabel("Temps");
+                NumberAxis yAxis = new NumberAxis("Variation", min.get().getLow(), max.get().getHigh(), 0.2);
+                LineChart chart = new LineChart(xAxis, yAxis, lineChartData);
+                chart.setPrefWidth(1010);
+                chart.setPrefHeight(400);
+                hboxGraph.getChildren().clear();
+                hboxGraph.getChildren().add(chart);
+
+            } else
+                visible(false);
+        }
+
+        );
+        executorService.submit(task);
+        executorService.shutdown();
     }
 
     private void visible(boolean visible) {

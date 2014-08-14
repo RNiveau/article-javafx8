@@ -1,86 +1,94 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import javafx.collections.*?>
+<?import javafx.scene.chart.*?>
+<?import javafx.scene.control.cell.*?>
 <?import javafx.collections.FXCollections?>
 <?import javafx.geometry.*?>
 <?import javafx.scene.chart.CategoryAxis?>
 <?import javafx.scene.chart.LineChart?>
 <?import javafx.scene.chart.NumberAxis?>
 <?import javafx.scene.control.*?>
+<?import javafx.scene.control.cell.PropertyValueFactory?>
 <?import javafx.scene.layout.*?>
 <?import java.lang.*?>
-<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="968.0"
-            prefWidth="1024.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1"
-            fx:controller="fr.xebia.blog.jfx.Controller">
+
+<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="968.0" prefWidth="1024.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="fr.xebia.blog.jfx.Controller">
     <children>
         <VBox>
             <children>
                 <HBox prefWidth="200.0">
                     <children>
-                        <Label prefHeight="16.0" prefWidth="187.0" text="Code action"/>
-                        <TextField fx:id="code" prefWidth="150.0"/>
+                        <Label prefHeight="16.0" prefWidth="187.0" text="Code action" />
+                        <TextField fx:id="code" prefWidth="150.0" />
                     </children>
                     <padding>
-                        <Insets left="10.0" top="10.0"/>
+                        <Insets left="10.0" top="10.0" />
                     </padding>
                 </HBox>
                 <HBox prefWidth="200.0">
                     <children>
-                        <Label prefHeight="16.0" prefWidth="187.0" text="Période (mois)"/>
+                        <Label prefHeight="16.0" prefWidth="187.0" text="Période (mois)" />
                         <ChoiceBox fx:id="duration" prefHeight="26.0" prefWidth="150.0">
                             <items>
                                 <FXCollections fx:factory="observableArrayList">
-                                    <Integer fx:value="3"/>
-                                    <Integer fx:value="4"/>
-                                    <Integer fx:value="5"/>
-                                    <Integer fx:value="6"/>
-                                    <Integer fx:value="7"/>
-                                    <Integer fx:value="8"/>
-                                    <Integer fx:value="9"/>
-                                    <Integer fx:value="10"/>
-                                    <Integer fx:value="11"/>
-                                    <Integer fx:value="12"/>
+                                    <Integer fx:value="3" />
+                                    <Integer fx:value="4" />
+                                    <Integer fx:value="5" />
+                                    <Integer fx:value="6" />
+                                    <Integer fx:value="7" />
+                                    <Integer fx:value="8" />
+                                    <Integer fx:value="9" />
+                                    <Integer fx:value="10" />
+                                    <Integer fx:value="11" />
+                                    <Integer fx:value="12" />
                                 </FXCollections>
                             </items>
                         </ChoiceBox>
                     </children>
                     <padding>
-                        <Insets left="10.0" top="10.0"/>
+                        <Insets left="10.0" top="10.0" />
                     </padding>
                 </HBox>
                 <HBox>
                     <children>
-                        <Button mnemonicParsing="false" onAction="#run" text="Lancer"/>
+                        <Button mnemonicParsing="false" onAction="#run" text="Lancer" />
                     </children>
                     <VBox.margin>
-                        <Insets left="10.0" top="10.0"/>
+                        <Insets left="10.0" top="10.0" />
                     </VBox.margin>
                 </HBox>
                 <HBox fx:id="hboxTable" prefWidth="200.0" visible="false">
                     <children>
-                        <TableView fx:id="tableView" prefHeight="200.0">
+                        <TableView fx:id="tableView" prefHeight="150.0">
                             <columns>
-                                <TableColumn prefWidth="75.0" text="C1"/>
-                                <TableColumn prefWidth="75.0" text="C2"/>
+                                <TableColumn minWidth="100.0" prefWidth="75.0" text="Date" fx:id="columnDate">
+                                    <cellValueFactory>
+                                        <PropertyValueFactory property="date" />
+                                    </cellValueFactory>
+                                </TableColumn>
+                                <TableColumn minWidth="100.0" prefWidth="75.0" text="Prix">
+                                    <cellValueFactory>
+                                        <PropertyValueFactory property="Close" />
+                                    </cellValueFactory>
+                                </TableColumn>
+                                <TableColumn minWidth="100.0" prefWidth="75.0" text="Volume">
+                                    <cellValueFactory>
+                                        <PropertyValueFactory property="Volume" />
+                                    </cellValueFactory>
+                                </TableColumn>
                             </columns>
                         </TableView>
                     </children>
                     <VBox.margin>
-                        <Insets top="20.0" left="10.0"/>
+                        <Insets left="10.0" top="20.0" />
                     </VBox.margin>
                 </HBox>
                 <HBox fx:id="hboxGraph" visible="false">
                     <children>
-                        <LineChart fx:id="graph" prefHeight="407.0" prefWidth="1014.0">
-                            <xAxis>
-                                <CategoryAxis side="BOTTOM"/>
-                            </xAxis>
-                            <yAxis>
-                                <NumberAxis side="LEFT"/>
-                            </yAxis>
-                        </LineChart>
                     </children>
                     <padding>
-                        <Insets top="20.0" left="10.0"/>
+                        <Insets left="10.0" top="20.0" />
                     </padding>
                 </HBox>
             </children>
