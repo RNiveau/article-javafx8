@@ -68,11 +68,7 @@ public class Controller implements Initializable {
 
     public void run(ActionEvent event) {
 
-        final Stage progressBar = new Stage();
-        progressBar.initModality(Modality.WINDOW_MODAL);
-        progressBar.initOwner(code.getScene().getWindow());
-        progressBar.setScene(new Scene(new Group(JfxUtils.loadFxml("/fr/xebia/blog/fxml/loading.fxml"))));
-        progressBar.show();
+        final Stage progressBar = openLoadingWindow();
 
         executorService = Executors.newSingleThreadExecutor();
 
@@ -82,20 +78,13 @@ public class Controller implements Initializable {
                 return yahooService.getHistoric(code.getText(), (Integer) duration.getValue());
             }
         };
-        task.setOnFailed(workerStateEvent -> {
-            progressBar.close();
-            visible(false);
-        });
+        task.setOnFailed(workerStateEvent -> getResponse(progressBar, false));
         task.setOnSucceeded(workerStateEvent -> {
-            progressBar.close();
             YahooResponse yahooResponse = (YahooResponse) workerStateEvent.getSource().getValue();
             if (yahooResponse != null && yahooResponse.getQuery().getCount() > 0) {
-                visible(true);
-                final ObservableList<HistoricQuote> items = FXCollections
-                        .observableArrayList();
+                getResponse(progressBar, true);
                 List<HistoricQuote> quotes = yahooResponse.getQuery().getResults().getQuote();
-                quotes.stream().limit(5l).forEach(historic -> items.add(historic));
-                tableView.setItems(items);
+                fillTableView(quotes);
 
                 quotes.sort((h1, h2) -> {
                     if (h1.getDate().getTime() == h2.getDate().getTime())
@@ -103,41 +92,9 @@ public class Controller implements Initializable {
                     return h1.getDate().getTime() < h2.getDate().getTime() ? -1 : 1;
                 });
 
-                ObservableList<XYChart.Series<String, Float>> lineChartData = FXCollections
-                        .observableArrayList();
-                SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy");
-                final ObservableList<XYChart.Data<String, Float>> observableList = FXCollections
-                        .observableArrayList();
-                quotes.stream().forEach(historic -> {
-                    XYChart.Data<String, Float> data = new XYChart.Data<String, Float>(
-                            dateFormat.format(historic.getDate()),
-                             historic.getClose());
-                    observableList.add(data);
-                });
-                Optional<HistoricQuote> max = quotes.stream().max((h1, h2) -> {
-                    if (h1.getHigh() == h2.getHigh())
-                        return 0;
-                    return h1.getHigh() < h2.getHigh() ? -1 : 1;
-                });
-                Optional<HistoricQuote> min = quotes.stream().min((h1, h2) -> {
-                    if (h1.getLow() == h2.getLow())
-                        return 0;
-                    return h1.getHigh() < h2.getHigh() ? -1 : 1;
-                });
-                final XYChart.Series<String, Float> series = new XYChart.Series<String, Float>(
-                        "Evolution du cours", observableList);
-                lineChartData.add(series);
-                final CategoryAxis xAxis = new CategoryAxis();
-                xAxis.setLabel("Temps");
-                NumberAxis yAxis = new NumberAxis("Variation", min.get().getLow(), max.get().getHigh(), 0.2);
-                LineChart chart = new LineChart(xAxis, yAxis, lineChartData);
-                chart.setPrefWidth(1010);
-                chart.setPrefHeight(400);
-                hboxGraph.getChildren().clear();
-                hboxGraph.getChildren().add(chart);
-
+                fillGraph(quotes);
             } else
-                visible(false);
+                getResponse(progressBar, false);
         }
 
         );
@@ -145,7 +102,71 @@ public class Controller implements Initializable {
         executorService.shutdown();
     }
 
-    private void visible(boolean visible) {
+    private void fillGraph(List<HistoricQuote> quotes) {
+        ObservableList<XYChart.Series<String, Float>> lineChartData = FXCollections
+                .observableArrayList();
+        SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy");
+
+        final XYChart.Series<String, Float> series = createSerie(quotes, dateFormat);
+        lineChartData.add(series);
+
+        NumberAxis yAxis = createYAxis(quotes);
+
+        final CategoryAxis xAxis = new CategoryAxis();
+        xAxis.setLabel("Temps");
+        LineChart chart = new LineChart(xAxis, yAxis, lineChartData);
+        chart.setPrefWidth(1010);
+        chart.setPrefHeight(400);
+
+        hboxGraph.getChildren().clear();
+        hboxGraph.getChildren().add(chart);
+    }
+
+    private NumberAxis createYAxis(List<HistoricQuote> quotes) {
+        Optional<HistoricQuote> max = quotes.stream().max((h1, h2) -> {
+            if (h1.getHigh() == h2.getHigh())
+                return 0;
+            return h1.getHigh() < h2.getHigh() ? -1 : 1;
+        });
+        Optional<HistoricQuote> min = quotes.stream().min((h1, h2) -> {
+            if (h1.getLow() == h2.getLow())
+                return 0;
+            return h1.getHigh() < h2.getHigh() ? -1 : 1;
+        });
+        return new NumberAxis("Variation", min.get().getLow(), max.get().getHigh(), 0.2);
+    }
+
+    private XYChart.Series<String, Float> createSerie(List<HistoricQuote> quotes, SimpleDateFormat dateFormat) {
+        final ObservableList<XYChart.Data<String, Float>> observableList = FXCollections
+                .observableArrayList();
+        quotes.stream().forEach(historic -> {
+            XYChart.Data<String, Float> data = new XYChart.Data<String, Float>(
+                    dateFormat.format(historic.getDate()),
+                    historic.getClose());
+            observableList.add(data);
+        });
+        return new XYChart.Series<String, Float>(
+                "Evolution du cours", observableList);
+    }
+
+    private void fillTableView(List<HistoricQuote> quotes) {
+        final ObservableList<HistoricQuote> items = FXCollections
+                .observableArrayList();
+        quotes.stream().limit(5l).forEach(historic -> items.add(historic));
+        tableView.setItems(items);
+    }
+
+    private Stage openLoadingWindow() {
+        final Stage progressBar = new Stage();
+        progressBar.initModality(Modality.WINDOW_MODAL);
+        progressBar.initOwner(code.getScene().getWindow());
+        progressBar.setScene(new Scene(new Group(JfxUtils.loadFxml("/fr/xebia/blog/fxml/loading.fxml"))));
+        progressBar.show();
+        return progressBar;
+    }
+
+    private void getResponse(Stage progressBar, boolean visible) {
+        progressBar.close();
         hboxTable.setVisible(visible);
         hboxGraph.setVisible(visible);
     }
