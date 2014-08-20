@@ -26,7 +26,6 @@ import javafx.stage.Stage;
 
 import java.net.URL;
 import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import java.util.ResourceBundle;
@@ -63,7 +62,7 @@ public class Controller implements Initializable {
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
         yahooService = new YahooService();
-        columnDate.setCellValueFactory(value -> new SimpleStringProperty(new SimpleDateFormat("dd-MM-yyyy").format((Date) ((HistoricQuote) ((TableColumn.CellDataFeatures) value).getValue()).getDate())));
+        columnDate.setCellValueFactory(value -> new SimpleStringProperty(new SimpleDateFormat("dd-MM-yyyy").format(((HistoricQuote) value.getValue()).getDate())));
     }
 
     public void run(ActionEvent event) {
