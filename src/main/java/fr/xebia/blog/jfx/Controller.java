@@ -62,7 +62,7 @@ public class Controller implements Initializable {
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
         yahooService = new YahooService();
-        columnDate.setCellValueFactory(value -> new SimpleStringProperty(new SimpleDateFormat("dd-MM-yyyy").format(((HistoricQuote) value.getValue()).getDate())));
+        columnDate.setCellValueFactory(value -> new SimpleStringProperty(new SimpleDateFormat("dd-MM-yyyy").format(((HistoricQuote) ((TableColumn.CellDataFeatures) value).getValue()).getDate())));
     }
 
     public void run(ActionEvent event) {
