@@ -47,7 +47,7 @@ public class Controller implements Initializable {
     private TableView<HistoricQuote> tableView;
 
     @FXML
-    public TableColumn columnDate;
+    private TableColumn columnDate;
 
     @FXML
     private HBox hboxTable;
@@ -104,9 +104,7 @@ public class Controller implements Initializable {
     private void fillGraph(List<HistoricQuote> quotes) {
         ObservableList<XYChart.Series<String, Float>> lineChartData = FXCollections
                 .observableArrayList();
-        SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy");
-
-        final XYChart.Series<String, Float> series = createSerie(quotes, dateFormat);
+        final XYChart.Series<String, Float> series = createSerie(quotes);
         lineChartData.add(series);
 
         NumberAxis yAxis = createYAxis(quotes);
@@ -135,7 +133,8 @@ public class Controller implements Initializable {
         return new NumberAxis("Variation", min.get().getLow(), max.get().getHigh(), 0.2);
     }
 
-    private XYChart.Series<String, Float> createSerie(List<HistoricQuote> quotes, SimpleDateFormat dateFormat) {
+    private XYChart.Series<String, Float> createSerie(List<HistoricQuote> quotes) {
+        SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy");
         final ObservableList<XYChart.Data<String, Float>> observableList = FXCollections
                 .observableArrayList();
         quotes.stream().forEach(historic -> {
@@ -171,3 +170,4 @@ public class Controller implements Initializable {
     }
 
 }
+
